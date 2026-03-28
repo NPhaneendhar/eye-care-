@@ -6,6 +6,7 @@ import IshiharaLab from './components/IshiharaLab'
 const snellenLetters = ['E', 'F', 'P', 'T', 'O', 'Z', 'L', 'D', 'C']
 
 function App() {
+  const baseUrl = import.meta.env.BASE_URL
   const [activeTab, setActiveTab] = useState('dashboard')
   const [currentSection, setCurrentSection] = useState('home')
   const [deferredPrompt, setDeferredPrompt] = useState(null)
@@ -77,7 +78,7 @@ function App() {
     if (Notification.permission === 'granted') {
       new Notification('👁️ EyeCare Pro: Break Time!', { 
         body: '20s Protocol Required: Blink, Look Away, Relax.', 
-        icon: '/eye-icon.svg',
+        icon: `${baseUrl}eye-icon.svg`,
         tag: 'eye-break'
       })
     }
@@ -142,7 +143,7 @@ function App() {
     setHealthScore(prev => Math.min(100, prev + 5))
     addLog('Rest Break', '+5% Health')
     if (Notification.permission === 'granted') {
-       new Notification('EyeCare Pro', { body: 'Break tracked! System optimized.', icon: '/icons/icon-192.png' })
+       new Notification('EyeCare Pro', { body: 'Break tracked! System optimized.', icon: `${baseUrl}icons/icon-192.png` })
     }
   }
 
