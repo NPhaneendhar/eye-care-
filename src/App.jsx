@@ -2,11 +2,18 @@ import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import SnellenLab from './components/SnellenLab'
 import IshiharaLab from './components/IshiharaLab'
+import AstigmatismPrecisionTest from './components/AstigmatismPrecisionTest'
+import PatientSessionPanel from './components/PatientSessionPanel'
+import ResultsDashboard from './components/ResultsDashboard'
+import ToolReportSheet from './components/ToolReportSheet'
+import { playClinicalTone } from './utils/sound'
+import { openPatientPdfReport } from './utils/pdfReport'
 
 const snellenLetters = ['E', 'F', 'P', 'T', 'O', 'Z', 'L', 'D', 'C']
 
 function App() {
   const baseUrl = import.meta.env.BASE_URL
+  const [launcherDismissed, setLauncherDismissed] = useState(() => localStorage.getItem('launcherDismissed') === 'true')
   const [activeTab, setActiveTab] = useState('dashboard')
   const [currentSection, setCurrentSection] = useState('home')
   const [deferredPrompt, setDeferredPrompt] = useState(null)
@@ -25,17 +32,23 @@ function App() {
     return saved !== null ? Number(saved) : 100
   })
   const [activityLogs, setActivityLogs] = useState(() => JSON.parse(localStorage.getItem('activityLogs')) || [])
+  const [sessionHistory, setSessionHistory] = useState(() => JSON.parse(localStorage.getItem('patientSessions')) || [])
   const [sessionStartTime] = useState(Date.now())
   
   // Screening State
   const [screeningType, setScreeningType] = useState(null)
+  const [patientName, setPatientName] = useState(() => localStorage.getItem('patientNameDraft') || '')
+  const [selectedEye, setSelectedEye] = useState(() => localStorage.getItem('selectedEyeDraft') || 'Right Eye')
+  const [activeSession, setActiveSession] = useState(() => JSON.parse(localStorage.getItem('activePatientSession')) || null)
+  const [toolReport, setToolReport] = useState(null)
+  const [showInstallHelp, setShowInstallHelp] = useState(false)
   
   // Ishihara State
   const [ishiharaResult, setIshiharaResult] = useState(() => localStorage.getItem('ishiharaResult') || 'Neutral')
-
-  // Astigmatism State
-  const [astigmatismNotes, setAstigmatismNotes] = useState('')
-  const [blurrySegments, setBlurrySegments] = useState([])
+  const [acuityResult, setAcuityResult] = useState(() => localStorage.getItem('acuityResult') || '--')
+  const [astigmatismAxis, setAstigmatismAxis] = useState(() => localStorage.getItem('astigmatismAxis') || '--')
+  const [contrastResult, setContrastResult] = useState(() => localStorage.getItem('contrastResult') || '--')
+  const [blinkRateResult, setBlinkRateResult] = useState(() => localStorage.getItem('blinkRateResult') || '--')
 
   // Contrast State
   const [contrastLevel, setContrastLevel] = useState(100)
@@ -54,7 +67,30 @@ function App() {
     localStorage.setItem('ishiharaResult', ishiharaResult)
     localStorage.setItem('activityLogs', JSON.stringify(activityLogs))
     localStorage.setItem('healthScore', healthScore.toString())
-  }, [breaksTaken, ishiharaResult, activityLogs, healthScore])
+    localStorage.setItem('patientSessions', JSON.stringify(sessionHistory))
+    localStorage.setItem('patientNameDraft', patientName)
+    localStorage.setItem('selectedEyeDraft', selectedEye)
+    localStorage.setItem('activePatientSession', JSON.stringify(activeSession))
+    localStorage.setItem('acuityResult', acuityResult)
+    localStorage.setItem('astigmatismAxis', astigmatismAxis)
+    localStorage.setItem('contrastResult', contrastResult)
+    localStorage.setItem('blinkRateResult', blinkRateResult)
+    localStorage.setItem('launcherDismissed', launcherDismissed ? 'true' : 'false')
+  }, [
+    breaksTaken,
+    ishiharaResult,
+    activityLogs,
+    healthScore,
+    sessionHistory,
+    patientName,
+    selectedEye,
+    activeSession,
+    acuityResult,
+    astigmatismAxis,
+    contrastResult,
+    blinkRateResult,
+    launcherDismissed,
+  ])
 
   // Reminder Countdown Logic
   useEffect(() => {
@@ -112,7 +148,6 @@ function App() {
 
     if (isStandalone) {
       setIsInstalled(true)
-      setCurrentSection('content')
     }
 
     const handleBeforeInstallPrompt = (e) => {
@@ -123,7 +158,6 @@ function App() {
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setDeferredPrompt(null)
-      setCurrentSection('content')
     }
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
@@ -148,6 +182,60 @@ function App() {
     setActivityLogs(prev => [newLog, ...prev].slice(0, 10))
   }
 
+  const updateActiveSessionResults = (patch) => {
+    setActiveSession((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        results: {
+          ...prev.results,
+          ...patch,
+        },
+      }
+    })
+  }
+
+  const startPatientSession = () => {
+    const trimmedName = patientName.trim() || 'Guest Patient'
+    const now = new Date()
+    const nextSession = {
+      id: Date.now(),
+      patientName: trimmedName,
+      eye: selectedEye,
+      startedAt: now.toISOString(),
+      startedAtLabel: now.toLocaleString(),
+      results: {},
+    }
+    setPatientName(trimmedName)
+    setActiveSession(nextSession)
+    addLog('Session', `${trimmedName} | ${selectedEye}`)
+    playClinicalTone('soft')
+  }
+
+  const finishPatientSession = () => {
+    setActiveSession((prev) => {
+      if (!prev) return null
+      const completedAt = new Date()
+      const completed = {
+        ...prev,
+        completedAt: completedAt.toISOString(),
+        completedAtLabel: completedAt.toLocaleString(),
+        results: {
+          acuity: prev.results?.acuity || acuityResult,
+          colorVision: prev.results?.colorVision || ishiharaResult,
+          astigmatism: prev.results?.astigmatism || astigmatismAxis,
+          contrast: prev.results?.contrast || contrastResult,
+          blink: prev.results?.blink || blinkRateResult,
+        },
+      }
+      setSessionHistory((history) => [completed, ...history].slice(0, 12))
+      addLog('Session Saved', `${completed.patientName} | ${completed.eye}`)
+      playClinicalTone('complete')
+      openPatientPdfReport(completed)
+      return null
+    })
+  }
+
   const resetAllData = () => {
     if (window.confirm('CRITICAL: Reset all medical history and scores?')) {
       localStorage.clear()
@@ -168,22 +256,35 @@ function App() {
     if (Notification.permission === 'granted') {
        new Notification('EyeCare Pro', { body: 'Break tracked! System optimized.', icon: `${baseUrl}icons/icon-192.png` })
     }
+    playClinicalTone('soft')
   }
 
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const choice = await deferredPrompt.userChoice
-      setDeferredPrompt(null)
 
       if (choice.outcome === 'accepted') {
+        setDeferredPrompt(null)
+        setIsInstalled(true)
+        setLauncherDismissed(true)
+        setShowInstallHelp(false)
         setCurrentSection('content')
       } else {
+        setLauncherDismissed(true)
+        setShowInstallHelp(true)
         setCurrentSection('content')
       }
       return
     }
+    setLauncherDismissed(true)
+    setShowInstallHelp(true)
     setCurrentSection('content')
+  }
+
+  const handleRefreshApp = () => {
+    playClinicalTone('soft')
+    window.location.reload()
   }
 
   const enableNotifications = async () => {
@@ -199,23 +300,6 @@ function App() {
     startReminders(reminderInterval)
   }
 
-  // Astigmatism Logic
-  const toggleSegment = (i) => {
-    setBlurrySegments(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i])
-  }
-
-  const recordAstigmatismResult = () => {
-    if (blurrySegments.length === 0) {
-      alert('Please select the blurry or darker segments first.')
-      return
-    }
-    const angles = blurrySegments.map(s => s * 15).join('°, ')
-    addLog('Astigmatism', `Meridians: ${angles}°`)
-    setScreeningType(null)
-    setBlurrySegments([])
-    alert(`Observations Recorded. Detected Meridians: ${angles}°`)
-  }
-
   // Contrast Logic
   const handleContrastAnswer = (isCorrect) => {
     const newScore = isCorrect ? contrastScore + 1 : contrastScore
@@ -225,11 +309,28 @@ function App() {
       setContrastLevel(prev => Math.max(1, prev - 20))
     } else {
       const pct = Math.round((newScore / 6) * 100)
+      const resultLabel = `${pct}% Sensitivity`
+      setContrastResult(resultLabel)
+      updateActiveSessionResults({ contrast: resultLabel })
       addLog('Contrast Test', `${pct}% Sensitivity`)
       setScreeningType(null)
-      alert(`Contrast Diagnostic: ${pct}% Sensitivity`)
+      setToolReport({
+        title: 'Contrast Sensitivity Report',
+        subtitle: `${activeSession?.patientName || patientName || 'Patient'} | ${activeSession?.eye || selectedEye}`,
+        result: resultLabel,
+        metrics: [
+          { label: 'Correct Responses', value: `${newScore}/6` },
+          { label: 'Final Level', value: `${contrastLevel}%` },
+          { label: 'Test Type', value: 'Contrast Lab' },
+        ],
+        notes: [
+          'Higher percentage suggests better on-screen contrast sensitivity.',
+          'Use this as a screening result, not a diagnosis.',
+        ],
+      })
       setContrastStep(0)
       setContrastLevel(100)
+      playClinicalTone('success')
     }
   }
 
@@ -241,7 +342,11 @@ function App() {
         if (p <= 1) { 
           clearInterval(timerRef.current); 
           setIsBlinkTracking(false); 
-          addLog('Blink Rate', `${blinkCount} bpm`);
+          const blinkLabel = `${blinkCount} bpm`
+          setBlinkRateResult(blinkLabel)
+          updateActiveSessionResults({ blink: blinkLabel })
+          addLog('Blink Rate', blinkLabel);
+          playClinicalTone('success')
           return 0; 
         }
         return p - 1
@@ -249,7 +354,26 @@ function App() {
     }, 1000)
   }
 
-  if (currentSection === 'home' && !isInstalled) {
+  const resultsMetrics = {
+    acuity: acuityResult,
+    acuityNote: activeSession?.eye || selectedEye,
+    colorVision: ishiharaResult,
+    colorVisionNote: 'Ishihara quick check',
+    astigmatism: astigmatismAxis,
+    astigmatismNote: 'Approx axis',
+    contrast: contrastResult,
+    contrastNote: 'Sensitivity score',
+    blink: blinkRateResult,
+    blinkNote: 'Last 60s test',
+  }
+
+  const patientSummary = {
+    name: activeSession?.patientName || patientName || 'No active patient',
+    eye: activeSession?.eye || selectedEye,
+    latestDate: sessionHistory[0]?.completedAtLabel || 'Today',
+  }
+
+  if (currentSection === 'home' && !isInstalled && !launcherDismissed) {
     return (
       <div className="landing-page">
         <div className="hero-section">
@@ -263,6 +387,14 @@ function App() {
             }}
           >
             DOWNLOAD APP
+          </button>
+          <button
+            className="install-btn glass-btn secondary-install-btn"
+            onClick={() => {
+              handleRefreshApp()
+            }}
+          >
+            REFRESH APP
           </button>
         </div>
       </div>
@@ -295,6 +427,7 @@ function App() {
             <span className="val">{healthScore}%</span>
             <span className="lab">INTEGRITY</span>
           </div>
+          <button className="refresh-chip" onClick={handleRefreshApp}>REFRESH</button>
         </div>
       </header>
 
@@ -344,13 +477,85 @@ function App() {
         </div>
       )}
 
+      {showInstallHelp && (
+        <div className="install-help-overlay animate-fade-in">
+          <div className="install-help-card glass-card">
+            <div className="tool-report-head">
+              <div>
+                <span className="card-tag">APP INSTALL</span>
+                <h3>Download / Install EyeCare Pro</h3>
+                <p>If your browser does not show the install popup automatically, use these steps.</p>
+              </div>
+              <button className="exit-btn" onClick={() => setShowInstallHelp(false)}>Close</button>
+            </div>
+
+            <div className="install-help-steps">
+              <div className="install-help-step">
+                <strong>Chrome / Edge</strong>
+                <p>Open the browser menu, then choose `Install app` or `Add to Home screen`.</p>
+              </div>
+              <div className="install-help-step">
+                <strong>Mobile browsers</strong>
+                <p>Open the browser share or menu option, then choose `Add to Home Screen`.</p>
+              </div>
+              <div className="install-help-step">
+                <strong>If install is still not showing</strong>
+                <p>Press refresh once, wait a few seconds, and try the download button again.</p>
+              </div>
+            </div>
+
+            <div className="install-help-actions">
+              <button className="btn-primary glow-btn" onClick={() => {
+                setShowInstallHelp(false)
+                setCurrentSection('content')
+              }}>
+                OPEN APP
+              </button>
+              <button className="btn-secondary" onClick={handleRefreshApp}>REFRESH APP</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <ToolReportSheet report={toolReport} onClose={() => setToolReport(null)} />
+
       {activeTab === 'screening' && screeningType === 'snellen' && (
-        <SnellenLab onExit={() => setScreeningType(null)} />
+        <SnellenLab
+          onExit={() => setScreeningType(null)}
+          eyeLabel={activeSession?.eye || selectedEye}
+          onComplete={(result) => {
+            const acuityLabel = `${result.ratio} at ${result.distance}`
+            setAcuityResult(acuityLabel)
+            updateActiveSessionResults({ acuity: acuityLabel })
+            addLog('Acuity', acuityLabel)
+            playClinicalTone('success')
+            setToolReport({
+              title: 'Acuity Test Report',
+              subtitle: `${activeSession?.patientName || patientName || 'Patient'} | ${activeSession?.eye || selectedEye}`,
+              result: acuityLabel,
+              metrics: [
+                { label: 'Optotype', value: result.letter },
+                { label: 'Size', value: `${result.sizeMm.toFixed(1)} mm` },
+                { label: 'Distance', value: result.distance },
+              ],
+              notes: [
+                'Saved from the current Snellen mobile screening view.',
+                'Clinical confirmation is recommended for formal acuity assessment.',
+              ],
+            })
+            setScreeningType(null)
+          }}
+        />
       )}
 
       <div className="scroll-container">
         {activeTab === 'dashboard' && (
           <div className="dashboard-grid">
+            <ResultsDashboard
+              patientSummary={patientSummary}
+              metrics={resultsMetrics}
+              sessionHistory={sessionHistory}
+            />
             <div className="card glass hero-card">
               <div className="card-header">
                 <span className="card-tag">SYSTEM STATUS</span>
@@ -448,7 +653,17 @@ function App() {
         {activeTab === 'screening' && (
           <div className="screening-container">
             {!screeningType ? (
-              <div className="lab-selector">
+              <div className="lab-selector animate-fade-in">
+                <PatientSessionPanel
+                  patientName={patientName}
+                  setPatientName={setPatientName}
+                  selectedEye={selectedEye}
+                  setSelectedEye={setSelectedEye}
+                  activeSession={activeSession}
+                  sessionHistory={sessionHistory}
+                  onStartSession={startPatientSession}
+                  onFinishSession={finishPatientSession}
+                />
                 <h2>Vision Screening Labs</h2>
                 <div className="lab-grid">
                   <button className="lab-btn" onClick={() => setScreeningType('snellen')}>
@@ -479,47 +694,57 @@ function App() {
                     onComplete={({ pct, label }) => {
                       const result = `${label} (${pct}%)`
                       setIshiharaResult(result)
+                      updateActiveSessionResults({ colorVision: result })
                       addLog('Color Vision', result)
                       setScreeningType(null)
-                      alert(`Ishihara Complete: ${result}`)
+                      setToolReport({
+                        title: 'Color Vision Report',
+                        subtitle: `${activeSession?.patientName || patientName || 'Patient'} | ${activeSession?.eye || selectedEye}`,
+                        result,
+                        metrics: [
+                          { label: 'Accuracy', value: `${pct}%` },
+                          { label: 'Interpretation', value: label },
+                          { label: 'Test Plates', value: '12' },
+                        ],
+                        notes: [
+                          'Ishihara screening estimates red-green color vision performance.',
+                          'Lighting and display quality can affect the result.',
+                        ],
+                      })
+                      playClinicalTone('success')
                     }}
                   />
                 )}
 
                 {screeningType === 'astigmatism' && (
-                  <div className="lab-panel text-center">
-                    <h3>Astigmatism Precision Chart</h3>
-                    <p className="clinical-instruction">
-                      <strong>Instructions:</strong> Cover one eye. Look at the center white dot.
-                      <br/>If all lines appear <strong>equally dark and sharp</strong>, select "No Astigmatism".
-                      <br/>If some lines appear <strong>darker, thicker, or sharper</strong> than others, tap those specific lines.
-                    </p>
-                    <div className="interactive-wheel">
-                      {[...Array(12)].map((_, i) => (
-                        <div 
-                          key={i} 
-                          className={`segment-line ${blurrySegments.includes(i) ? 'selected' : ''}`} 
-                          style={{ transform: `translate(-50%, -50%) rotate(${i * 15}deg)` }}
-                          onClick={() => toggleSegment(i)}
-                        ></div>
-                      ))}
-                      <div className="center-point"></div>
-                    </div>
-                    
-                    <div className="astigmatism-controls" style={{marginTop: '20px'}}>
-                         {blurrySegments.length === 0 ? (
-                           <button className="btn-pass glass-btn" onClick={() => {
-                               alert('Result: No significant astigmatism detected locally. (Screening only)');
-                               setScreeningType(null);
-                           }}>All Lines Look Equal</button>
-                         ) : (
-                           <div className="report-flow animate-fade-in">
-                             <div className="feedback-pill">Axis Detected: {blurrySegments.map(s => s * 15).join('°, ')}°</div>
-                             <button className="btn-primary glow-btn btn-full" style={{marginTop: '15px'}} onClick={recordAstigmatismResult}>RECORD OBSERVATION</button>
-                           </div>
-                         )}
-                    </div>
-                  </div>
+                  <AstigmatismPrecisionTest
+                    onExit={() => setScreeningType(null)}
+                    onSaveResult={(report) => {
+                      if (typeof report.fusedAxis === 'number') {
+                        const axisLabel = `${Math.round(report.fusedAxis)} deg`
+                        setAstigmatismAxis(axisLabel)
+                        updateActiveSessionResults({ astigmatism: axisLabel })
+                        addLog('Astigmatism', `Approx axis ${axisLabel}`)
+                        setToolReport({
+                          title: 'Astigmatism Report',
+                          subtitle: `${activeSession?.patientName || patientName || 'Patient'} | ${activeSession?.eye || selectedEye}`,
+                          result: axisLabel,
+                          metrics: [
+                            { label: 'Selected Lines', value: report.selectedAngles?.length ? report.selectedAngles.map((angle) => `${Math.round(angle)} deg`).join(', ') : 'None' },
+                            { label: 'Rotating Test', value: report.rotationCaptures?.length ? report.rotationCaptures.map((angle) => `${Math.round(angle)} deg`).join(', ') : 'No captures' },
+                            { label: 'Approx Axis', value: axisLabel },
+                          ],
+                          notes: [
+                            'Axis is estimated from selected meridians and optional rotating-line captures.',
+                            'This is a screening output only.',
+                          ],
+                        })
+                      } else {
+                        addLog('Astigmatism', 'Screen completed')
+                      }
+                      playClinicalTone('complete')
+                    }}
+                  />
                 )}
 
                 {screeningType === 'contrast' && (

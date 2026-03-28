@@ -16,7 +16,7 @@ const ACUITY_LEVELS = [
 
 const DISTANCE_PRESETS = ['30 cm', '40 cm (recommended)', '50 cm']
 
-function SnellenLab({ onExit }) {
+function SnellenLab({ onExit, onComplete, eyeLabel = 'Right Eye' }) {
   const [pxPerMm] = useState(() => getPxPerMm())
   const [acuityIndex, setAcuityIndex] = useState(6)
   const [letter, setLetter] = useState('E')
@@ -70,16 +70,17 @@ function SnellenLab({ onExit }) {
       style={{
         position: 'fixed',
         inset: 0,
-        background: '#e2e8f0',
+        background: 'linear-gradient(180deg, #d8ecff 0%, #eef8ff 46%, #fff5df 100%)',
         zIndex: 5000,
-        fontFamily: 'Arial, Helvetica, sans-serif',
+        fontFamily: "'IBM Plex Sans', 'Segoe UI', sans-serif",
       }}
     >
       <main
         style={{
           position: 'absolute',
           inset: 0,
-          background: '#ffffff',
+          background:
+            'radial-gradient(circle at top, rgba(255,255,255,0.94), rgba(242,248,255,0.98) 55%, rgba(255,246,224,0.95) 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -105,17 +106,18 @@ function SnellenLab({ onExit }) {
       >
         <div
           style={{
-            background: 'rgba(15,23,42,0.95)',
-            color: '#f8fafc',
-            borderRadius: '10px',
-            padding: '8px 10px',
+            background: 'rgba(8, 34, 60, 0.9)',
+            color: '#f8fbff',
+            borderRadius: '16px',
+            padding: '10px 12px',
             fontSize: '12px',
             lineHeight: 1.35,
+            boxShadow: '0 18px 36px rgba(8, 34, 60, 0.18)',
           }}
         >
-          <div style={{ fontWeight: 700 }}>Super EyeCare Mobile Clinical Mode</div>
+          <div style={{ fontWeight: 700 }}>EyeCare Pro Vision Test</div>
           <div>Acuity: {target.ratio} | Size: {target.mm.toFixed(1)} mm</div>
-          <div>Test Distance: {distancePreset}</div>
+          <div>{eyeLabel} | Test Distance: {distancePreset}</div>
         </div>
 
         <button
@@ -123,13 +125,14 @@ function SnellenLab({ onExit }) {
           onClick={onExit}
           style={{
             background: '#ffffff',
-            color: '#0f172a',
-            border: '1px solid #94a3b8',
-            borderRadius: '8px',
-            padding: '8px 12px',
+            color: '#0f2945',
+            border: '1px solid #b8d4ea',
+            borderRadius: '12px',
+            padding: '10px 14px',
             fontWeight: 700,
             cursor: 'pointer',
             height: 'fit-content',
+            boxShadow: '0 10px 24px rgba(15, 41, 69, 0.12)',
           }}
         >
           Exit
@@ -143,11 +146,11 @@ function SnellenLab({ onExit }) {
             top: '70px',
             left: '10px',
             right: '10px',
-            background: '#fff7ed',
-            border: '1px solid #fdba74',
-            color: '#9a3412',
-            borderRadius: '8px',
-            padding: '8px 10px',
+            background: '#fff6dd',
+            border: '1px solid #f7c96c',
+            color: '#8f4b00',
+            borderRadius: '14px',
+            padding: '10px 12px',
             fontSize: '12px',
             fontWeight: 700,
           }}
@@ -162,28 +165,29 @@ function SnellenLab({ onExit }) {
           left: 0,
           right: 0,
           bottom: 0,
-          background: '#0f172a',
-          color: '#e2e8f0',
-          borderTopLeftRadius: '16px',
-          borderTopRightRadius: '16px',
-          borderTop: '1px solid #334155',
+          background: 'linear-gradient(180deg, rgba(10, 35, 60, 0.97), rgba(14, 54, 87, 0.98))',
+          color: '#eef8ff',
+          borderTopLeftRadius: '24px',
+          borderTopRightRadius: '24px',
+          borderTop: '1px solid rgba(255,255,255,0.16)',
           padding: '12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px',
           display: 'grid',
           gap: '10px',
+          boxShadow: '0 -24px 54px rgba(4, 16, 28, 0.24)',
         }}
       >
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <button
             type="button"
             onClick={prevSize}
-            style={{ background: '#1e293b', color: '#f8fafc', border: '1px solid #475569', padding: '10px', borderRadius: '8px', fontWeight: 700 }}
+            style={{ background: '#f4fbff', color: '#0e3558', border: '1px solid #cbe4f4', padding: '11px', borderRadius: '12px', fontWeight: 700 }}
           >
             Larger
           </button>
           <button
             type="button"
             onClick={nextSize}
-            style={{ background: '#1e293b', color: '#f8fafc', border: '1px solid #475569', padding: '10px', borderRadius: '8px', fontWeight: 700 }}
+            style={{ background: '#f4fbff', color: '#0e3558', border: '1px solid #cbe4f4', padding: '11px', borderRadius: '12px', fontWeight: 700 }}
           >
             Smaller
           </button>
@@ -193,21 +197,21 @@ function SnellenLab({ onExit }) {
           <button
             type="button"
             onClick={randomizeLetter}
-            style={{ background: '#334155', color: '#f8fafc', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 700 }}
+            style={{ background: 'rgba(255,255,255,0.16)', color: '#f8fbff', border: '1px solid rgba(255,255,255,0.14)', padding: '10px', borderRadius: '12px', fontWeight: 700 }}
           >
             Random
           </button>
           <button
             type="button"
             onClick={toggleFullscreen}
-            style={{ background: '#334155', color: '#f8fafc', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 700 }}
+            style={{ background: 'rgba(255,255,255,0.16)', color: '#f8fbff', border: '1px solid rgba(255,255,255,0.14)', padding: '10px', borderRadius: '12px', fontWeight: 700 }}
           >
             Fullscreen
           </button>
           <select
             value={distancePreset}
             onChange={(e) => setDistancePreset(e.target.value)}
-            style={{ background: '#f8fafc', color: '#0f172a', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: 700 }}
+            style={{ background: '#fffdf8', color: '#0f2945', border: 'none', padding: '10px', borderRadius: '12px', fontWeight: 700 }}
           >
             {DISTANCE_PRESETS.map((preset) => (
               <option key={preset} value={preset}>
@@ -224,10 +228,25 @@ function SnellenLab({ onExit }) {
             <div>{target.mm.toFixed(1)} mm = {letterPx.toFixed(2)} px</div>
           </div>
           <div style={{ justifySelf: 'end', textAlign: 'center', fontSize: '11px' }}>
-            <div style={{ width: `${tenMmPx}px`, height: `${tenMmPx}px`, border: '1px solid #ffffff', boxSizing: 'border-box', marginLeft: 'auto' }} />
+            <div style={{ width: `${tenMmPx}px`, height: `${tenMmPx}px`, border: '1px solid #ffffff', boxSizing: 'border-box', marginLeft: 'auto', borderRadius: '4px' }} />
             <div style={{ marginTop: '3px' }}>10 mm</div>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => onComplete?.({ ratio: target.ratio, sizeMm: target.mm, distance: distancePreset, letter })}
+          style={{
+            background: 'linear-gradient(135deg, #ffd48d, #8fe7ff)',
+            color: '#0b2742',
+            border: 'none',
+            padding: '12px',
+            borderRadius: '12px',
+            fontWeight: 700,
+          }}
+        >
+          Save Acuity Result
+        </button>
       </section>
     </div>
   )

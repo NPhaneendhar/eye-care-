@@ -12,24 +12,33 @@
 
 function SnellenOptotype({ letter, sizePx }) {
   const rows = MAPS[letter] || MAPS.E
+  const displayLetter = rows ? letter : 'E'
 
   return (
     <svg
       width={sizePx}
       height={sizePx}
-      viewBox="0 0 5 5"
+      viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label={`Optotype ${letter}`}
-      preserveAspectRatio="none"
-      shapeRendering="crispEdges"
+      preserveAspectRatio="xMidYMid meet"
       style={{ display: 'block', flex: '0 0 auto' }}
     >
-      {rows.flatMap((row, y) =>
-        row.split('').map((cell, x) =>
-          cell === '1' ? <rect key={`${letter}-${x}-${y}`} x={x} y={y} width="1" height="1" fill="#000000" /> : null,
-        ),
-      )}
+      <rect x="3" y="3" width="94" height="94" rx="18" fill="#fffdf7" />
+      <text
+        x="50"
+        y="56"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontFamily="Georgia, 'Times New Roman', serif"
+        fontSize="76"
+        fontWeight="700"
+        letterSpacing="-2"
+        fill="#111111"
+      >
+        {displayLetter}
+      </text>
     </svg>
   )
 }
