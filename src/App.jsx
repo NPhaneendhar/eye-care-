@@ -11,7 +11,6 @@ function App() {
   const [currentSection, setCurrentSection] = useState('home')
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [isInstalled, setIsInstalled] = useState(false)
-  const [installHint, setInstallHint] = useState('')
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [reminderInterval, setReminderInterval] = useState(20)
   const [nextReminderTime, setNextReminderTime] = useState(null)
@@ -119,13 +118,11 @@ function App() {
     const handleBeforeInstallPrompt = (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
-      setInstallHint('')
     }
 
     const handleAppInstalled = () => {
       setIsInstalled(true)
       setDeferredPrompt(null)
-      setInstallHint('App installed successfully.')
       setCurrentSection('content')
     }
 
@@ -180,31 +177,13 @@ function App() {
       setDeferredPrompt(null)
 
       if (choice.outcome === 'accepted') {
-        setInstallHint('Install request accepted. Your browser will finish adding the app.')
+        setCurrentSection('content')
       } else {
-        setInstallHint('Install was cancelled. You can try again from the browser menu.')
+        setCurrentSection('content')
       }
       return
     }
-
-    const ua = navigator.userAgent.toLowerCase()
-
-    if (window.location.protocol === 'file:') {
-      setInstallHint('Install is not available from a local file. Open the app on localhost or HTTPS.')
-      return
-    }
-
-    if (!window.isSecureContext) {
-      setInstallHint('Install requires a secure site. Use https:// or localhost.')
-      return
-    }
-
-    if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
-      setInstallHint('On iPhone or iPad, use Share and then Add to Home Screen.')
-      return
-    }
-
-    setInstallHint('This browser has not exposed the install prompt yet. In Chrome or Edge, use the browser menu and choose Install app.')
+    setCurrentSection('content')
   }
 
   const enableNotifications = async () => {
@@ -280,18 +259,11 @@ function App() {
           <button
             className="install-btn glass-btn"
             onClick={() => {
-              if (deferredPrompt) {
-                handleInstall()
-                return
-              }
-              setCurrentSection('content')
+              handleInstall()
             }}
           >
-            {deferredPrompt ? 'INSTALL APP' : 'OPEN DASHBOARD'}
+            DOWNLOAD APP
           </button>
-          <p className="description" style={{ marginTop: '14px', marginBottom: 0 }}>
-            {installHint || 'Install is available only when your browser allows PWA install for this site.'}
-          </p>
         </div>
       </div>
     )
@@ -329,10 +301,10 @@ function App() {
       {deferredPrompt && (
         <div className="install-banner glass-card animate-slide-down">
           <div className="banner-content">
-            <span className="icon">📲</span>
+            <span className="icon">APP</span>
             <div className="text">
-              <h3>Install Desktop Dashboard</h3>
-              <p>Experience EyeCare Pro as a native application.</p>
+              <h3>Download Mobile App</h3>
+              <p>Tap below to install or open EyeCare Pro.</p>
             </div>
           </div>
           <button className="install-action-btn" onClick={handleInstall}>DOWNLOAD APP</button>
@@ -698,3 +670,4 @@ function App() {
 }
 
 export default App
+
