@@ -11,6 +11,7 @@ function App() {
   const [currentSection, setCurrentSection] = useState('home')
   const [deferredPrompt, setDeferredPrompt] = useState(null)
   const [isInstalled, setIsInstalled] = useState(false)
+  const [installHint, setInstallHint] = useState('')
   const [notificationsEnabled, setNotificationsEnabled] = useState(false)
   const [reminderInterval, setReminderInterval] = useState(20)
   const [nextReminderTime, setNextReminderTime] = useState(null)
@@ -106,12 +107,37 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (window.matchMedia('(display-mode: standalone)').matches) {
+    const isStandalone =
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true
+
+    if (isStandalone) {
       setIsInstalled(true)
       setCurrentSection('content')
     }
-    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); setDeferredPrompt(e); })
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+      setInstallHint('')
+    }
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true)
+      setDeferredPrompt(null)
+      setInstallHint('App installed successfully.')
+      setCurrentSection('content')
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
     if ('Notification' in window && Notification.permission === 'granted') setNotificationsEnabled(true)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
   }, [])
 
   const addLog = (type, value) => {
@@ -148,11 +174,37 @@ function App() {
   }
 
   const handleInstall = async () => {
-    if (!deferredPrompt) return
-    deferredPrompt.prompt()
-    await deferredPrompt.userChoice
-    setDeferredPrompt(null)
-    setCurrentSection('content')
+    if (deferredPrompt) {
+      deferredPrompt.prompt()
+      const choice = await deferredPrompt.userChoice
+      setDeferredPrompt(null)
+
+      if (choice.outcome === 'accepted') {
+        setInstallHint('Install request accepted. Your browser will finish adding the app.')
+      } else {
+        setInstallHint('Install was cancelled. You can try again from the browser menu.')
+      }
+      return
+    }
+
+    const ua = navigator.userAgent.toLowerCase()
+
+    if (window.location.protocol === 'file:') {
+      setInstallHint('Install is not available from a local file. Open the app on localhost or HTTPS.')
+      return
+    }
+
+    if (!window.isSecureContext) {
+      setInstallHint('Install requires a secure site. Use https:// or localhost.')
+      return
+    }
+
+    if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) {
+      setInstallHint('On iPhone or iPad, use Share and then Add to Home Screen.')
+      return
+    }
+
+    setInstallHint('This browser has not exposed the install prompt yet. In Chrome or Edge, use the browser menu and choose Install app.')
   }
 
   const enableNotifications = async () => {
@@ -225,12 +277,21 @@ function App() {
           <div className="eye-icon">👁️</div>
           <h1 className="premium-glow-text">EyeCare Pro</h1>
           <p className="description">Advanced Clinical Dashboard for Mobile</p>
-          <button className="install-btn glass-btn" onClick={() => {
-            if (deferredPrompt) handleInstall()
-            else setCurrentSection('content')
-          }}>
-            📲 DOWNLOAD APP
+          <button
+            className="install-btn glass-btn"
+            onClick={() => {
+              if (deferredPrompt) {
+                handleInstall()
+                return
+              }
+              setCurrentSection('content')
+            }}
+          >
+            {deferredPrompt ? 'INSTALL APP' : 'OPEN DASHBOARD'}
           </button>
+          <p className="description" style={{ marginTop: '14px', marginBottom: 0 }}>
+            {installHint || 'Install is available only when your browser allows PWA install for this site.'}
+          </p>
         </div>
       </div>
     )
