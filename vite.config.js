@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  base: '/',
+  base: './',
   plugins: [
     react(),
     VitePWA({
@@ -11,14 +11,14 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'eye-icon.svg'],
       manifest: {
-        id: '/',
+        id: './',
         name: 'EyeCare Pro',
         short_name: 'EyeCare',
         description: 'Professional ocular care, screening tools, and reminders that work offline.',
         theme_color: '#6366f1',
         background_color: '#0f172a',
-        start_url: '/',
-        scope: '/',
+        start_url: './',
+        scope: './',
         display: 'standalone',
         display_override: ['window-controls-overlay', 'standalone', 'minimal-ui', 'browser'],
         orientation: 'portrait',
