@@ -1027,6 +1027,196 @@ button:disabled {
   gap: 14px;
 }
 
+.ishihara-lab {
+  display: grid;
+  gap: 18px;
+}
+
+.ishihara-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.ishihara-heading {
+  min-width: 0;
+}
+
+.ishihara-heading h3 {
+  margin: 8px 0 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.72rem;
+  letter-spacing: -0.03em;
+  color: #ffffff;
+}
+
+.ishihara-heading p {
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ishihara-card {
+  padding: 22px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255, 133, 162, 0.14), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(255, 214, 102, 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03)),
+    rgba(9, 16, 28, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ishihara-status-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ishihara-progress-copy {
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ishihara-progress-copy.align-right {
+  text-align: right;
+}
+
+.ishihara-status-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ishihara-progress-copy strong,
+.ishihara-prompt-card h4 {
+  color: #ffffff;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.ishihara-progress-bar {
+  height: 10px;
+  margin-top: 16px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ishihara-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff9db6, #ffd76d, #88f0d5);
+  box-shadow: 0 0 24px rgba(255, 194, 112, 0.22);
+}
+
+.ishihara-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 18px;
+  margin-top: 18px;
+  align-items: center;
+}
+
+.ishihara-plate-shell {
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at top, rgba(255, 214, 102, 0.14), transparent 34%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ishihara-plate-frame {
+  width: min(100%, 360px);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border-radius: 32px;
+  background: linear-gradient(180deg, #fff5f7, #ffe2e6);
+  box-shadow: inset 0 2px 18px rgba(255, 255, 255, 0.55), 0 22px 42px rgba(0, 0, 0, 0.18);
+}
+
+.ishihara-plate-image {
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+.ishihara-plate-fallback {
+  width: 88%;
+  height: 88%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 24px;
+  border-radius: 50%;
+  border: 1px dashed #b78b95;
+  color: #5a3c44;
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.ishihara-plate-fallback strong {
+  margin-top: 8px;
+  display: block;
+}
+
+.ishihara-answer-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.ishihara-prompt-card {
+  padding: 18px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.ishihara-prompt-card h4 {
+  margin: 4px 0 8px;
+  font-size: 1.34rem;
+}
+
+.ishihara-prompt-card p {
+  color: var(--text-soft);
+  line-height: 1.65;
+}
+
+.ishihara-input {
+  width: 100%;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-size: 1rem;
+}
+
+.ishihara-input::placeholder {
+  color: rgba(219, 234, 254, 0.7);
+}
+
+.ishihara-action-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ishihara-secondary-btn,
+.ishihara-primary-btn {
+  width: 100%;
+}
+
 .lab-btn {
   position: relative;
   overflow: hidden;
@@ -2288,6 +2478,43 @@ button:disabled {
   .astig-rotate-card {
     padding: 18px 16px;
     border-radius: 22px;
+  }
+
+  .ishihara-topbar {
+    flex-direction: column;
+  }
+
+  .ishihara-topbar .exit-btn {
+    width: 100%;
+  }
+
+  .ishihara-heading h3 {
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  .ishihara-card {
+    padding: 18px 16px;
+    border-radius: 22px;
+  }
+
+  .ishihara-status-row,
+  .ishihara-stage,
+  .ishihara-action-row {
+    grid-template-columns: 1fr;
+  }
+
+  .ishihara-progress-copy.align-right {
+    text-align: left;
+  }
+
+  .ishihara-plate-shell {
+    padding: 12px;
+  }
+
+  .ishihara-plate-frame {
+    width: min(100%, 320px);
+    border-radius: 24px;
   }
 
   .astig-topbar,

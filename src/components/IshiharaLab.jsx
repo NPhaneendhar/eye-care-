@@ -1,30 +1,43 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 const PLATES = [
-  { id: 1, expected: ['26'], type: 'Vanishing' },
-  { id: 2, expected: ['6'], type: 'Vanishing' },
-  { id: 3, expected: ['13'], type: 'Vanishing' },
-  { id: 4, expected: ['8'], type: 'Vanishing' },
-  { id: 5, expected: ['45'], type: 'Vanishing' },
-  { id: 6, expected: ['7'], type: 'Vanishing' },
-  { id: 7, expected: ['16'], type: 'Vanishing' },
-  { id: 8, expected: ['5'], type: 'Vanishing' },
-  { id: 9, expected: ['15'], type: 'Vanishing' },
-  { id: 10, expected: ['29'], type: 'Vanishing' },
-  { id: 11, expected: ['12'], type: 'Control' },
-  { id: 12, expected: ['8'], type: 'Vanishing' },
+  { id: 1, expected: ['26'] },
+  { id: 2, expected: ['6'] },
+  { id: 3, expected: ['13'] },
+  { id: 4, expected: ['8'] },
+  { id: 5, expected: ['45'] },
+  { id: 6, expected: ['7'] },
+  { id: 7, expected: ['16'] },
+  { id: 8, expected: ['5'] },
+  { id: 9, expected: ['15'] },
+  { id: 10, expected: ['29'] },
+  { id: 11, expected: ['12'] },
+  { id: 12, expected: ['8'] },
 ]
 
 const normalize = (value) => value.trim().toLowerCase().replace(/\s+/g, '')
 
+const shufflePlates = (plates) => {
+  const next = [...plates]
+
+  for (let index = next.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1))
+    ;[next[index], next[randomIndex]] = [next[randomIndex], next[index]]
+  }
+
+  return next
+}
+
 function IshiharaLab({ onExit, onComplete }) {
+  const orderedPlates = useMemo(() => shufflePlates(PLATES), [])
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
   const [responses, setResponses] = useState([])
   const [imgOk, setImgOk] = useState(false)
 
-  const plate = PLATES[index]
-  const imgSrc = `${import.meta.env.BASE_URL}ishihara/image${plate.id}.png?v=20260328-image-set`
+  const plate = orderedPlates[index]
+  const imgSrc = `${import.meta.env.BASE_URL}ishihara/image${plate.id}.png?v=20260329-shuffle`
+  const progressPct = Math.round(((index + 1) / orderedPlates.length) * 100)
 
   const commit = (isSkip = false) => {
     const typed = isSkip ? '' : answer
@@ -41,7 +54,7 @@ function IshiharaLab({ onExit, onComplete }) {
       },
     ]
 
-    if (index < PLATES.length - 1) {
+    if (index < orderedPlates.length - 1) {
       setResponses(next)
       setIndex((prev) => prev + 1)
       setAnswer('')
@@ -50,11 +63,11 @@ function IshiharaLab({ onExit, onComplete }) {
     }
 
     const correctCount = next.filter((item) => item.correct).length
-    const pct = Math.round((correctCount / PLATES.length) * 100)
+    const pct = Math.round((correctCount / orderedPlates.length) * 100)
     const label = pct >= 84 ? 'Normal' : pct >= 60 ? 'Borderline' : 'Refer'
 
     onComplete({
-      total: PLATES.length,
+      total: orderedPlates.length,
       correct: correctCount,
       pct,
       label,
@@ -63,75 +76,77 @@ function IshiharaLab({ onExit, onComplete }) {
   }
 
   return (
-    <div style={{ minHeight: '70vh', display: 'grid', gridTemplateRows: 'auto auto 1fr auto', gap: '14px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h3 style={{ margin: 0, color: '#111827' }}>Ishihara Quick Color Test</h3>
-          <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-            Plate {index + 1}/{PLATES.length} | Type: {plate.type}
+    <div className="ishihara-lab">
+      <div className="ishihara-topbar">
+        <div className="ishihara-heading">
+          <span className="lab-kicker">Color Vision Screen</span>
+          <h3>Ishihara Screening</h3>
+          <p>Each session now uses a fresh randomized plate order for a cleaner test flow.</p>
+        </div>
+        <button className="exit-btn" onClick={onExit}>Exit Test</button>
+      </div>
+
+      <section className="ishihara-card glass-card">
+        <div className="ishihara-status-row">
+          <div className="ishihara-progress-copy">
+            <span className="ishihara-status-label">Plate Progress</span>
+            <strong>{index + 1} / {orderedPlates.length}</strong>
+          </div>
+          <div className="ishihara-progress-copy align-right">
+            <span className="ishihara-status-label">Current Plate</span>
+            <strong>Plate {plate.id}</strong>
           </div>
         </div>
-        <button className="glass-btn" onClick={onExit}>Exit</button>
-      </div>
 
-      <div
-        style={{
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
-          borderRadius: '14px',
-          padding: '12px 14px',
-          color: '#334155',
-          fontSize: '12px',
-          lineHeight: 1.5,
-        }}
-      >
-        Quick check sequence on this website:
-        <strong style={{ color: '#0f172a' }}> 26, 6, 13, 8, 45, 7, 16, 5, 15, 29, 12, 8</strong>
-      </div>
+        <div className="ishihara-progress-bar">
+          <div className="ishihara-progress-fill" style={{ width: `${progressPct}%` }} />
+        </div>
 
-      <div style={{ display: 'grid', placeItems: 'center', background: '#ffffff', borderRadius: '16px', border: '1px solid #e5e7eb', padding: '16px' }}>
-        <div style={{ width: 'min(78vw, 320px)', aspectRatio: '1 / 1' }}>
-          <img
-            src={imgSrc}
-            alt={`Ishihara plate ${plate.id}`}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '50%', display: imgOk ? 'block' : 'none' }}
-            onLoad={() => setImgOk(true)}
-            onError={() => setImgOk(false)}
-          />
+        <div className="ishihara-stage">
+          <div className="ishihara-plate-shell">
+            <div className="ishihara-plate-frame">
+              <img
+                src={imgSrc}
+                alt={`Ishihara plate ${plate.id}`}
+                className="ishihara-plate-image"
+                style={{ display: imgOk ? 'block' : 'none' }}
+                onLoad={() => setImgOk(true)}
+                onError={() => setImgOk(false)}
+              />
 
-          {!imgOk && (
-            <div style={{ width: '100%', height: '100%', borderRadius: '50%', border: '1px dashed #94a3b8', display: 'grid', placeItems: 'center', padding: '24px', color: '#475569', textAlign: 'center', fontSize: '12px' }}>
-              Plate image missing:
-              <br />
-              <strong style={{ marginTop: '6px', display: 'block' }}>public/ishihara/image{plate.id}.png</strong>
+              {!imgOk && (
+                <div className="ishihara-plate-fallback">
+                  <span>Plate image missing</span>
+                  <strong>public/ishihara/image{plate.id}.png</strong>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <div style={{ display: 'grid', gap: '10px' }}>
-        <input
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Enter number you see"
-          inputMode="numeric"
-          style={{
-            width: '100%',
-            padding: '12px',
-            borderRadius: '10px',
-            border: '1px solid #cbd5e1',
-            fontSize: '16px',
-            background: '#ffffff',
-            color: '#111827',
-          }}
-        />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-          <button className="btn-fail" onClick={() => commit(true)}>Skip</button>
-          <button className="btn-pass" onClick={() => commit(false)} disabled={!answer.trim()}>
-            Submit
-          </button>
+          <div className="ishihara-answer-panel">
+            <div className="ishihara-prompt-card">
+              <span className="ishihara-status-label">Question</span>
+              <h4>What number do you see?</h4>
+              <p>Type only the number visible inside the plate. If you cannot see one, press Skip.</p>
+            </div>
+
+            <input
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              placeholder="Enter the number"
+              inputMode="numeric"
+              className="ishihara-input"
+            />
+
+            <div className="ishihara-action-row">
+              <button className="btn-secondary ishihara-secondary-btn" onClick={() => commit(true)}>Skip</button>
+              <button className="btn-primary glow-btn ishihara-primary-btn" onClick={() => commit(false)} disabled={!answer.trim()}>
+                Submit Answer
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
