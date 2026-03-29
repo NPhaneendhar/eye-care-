@@ -338,11 +338,6 @@ function App() {
   }
 
   const handleInstall = async () => {
-    if (isInstalled) {
-      setCurrentSection('content')
-      return
-    }
-
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const choice = await deferredPrompt.userChoice
@@ -375,14 +370,14 @@ function App() {
     }
   }
 
-  const installInstructions = getInstallInstructions(installEnv, Boolean(deferredPrompt))
-  const installTitle = isInstalled
-    ? 'OPEN APP'
-    : deferredPrompt
-      ? 'INSTALL APP'
-      : installEnv.isIos
-        ? 'ADD TO HOME SCREEN'
-        : 'INSTALL GUIDE'
+  const installInstructions = isInstalled
+    ? ['EyeCare Pro is already installed on this device.', 'Open it from your home screen, desktop, or app launcher.']
+    : getInstallInstructions(installEnv, Boolean(deferredPrompt))
+  const installTitle = deferredPrompt
+    ? 'INSTALL APP'
+    : installEnv.isIos
+      ? 'ADD TO HOME SCREEN'
+      : 'INSTALL APP'
   const installHint = !installEnv.isSecure
     ? 'Install works only from HTTPS or localhost.'
     : deferredPrompt
@@ -493,26 +488,26 @@ function App() {
           <p className="description">Advanced Clinical Dashboard for Mobile</p>
           <p className="install-subtitle">{installHint}</p>
           <button
-            className="install-btn glass-btn"
+            className="install-btn install-primary-btn"
             onClick={() => {
               handleInstall()
             }}
           >
-            {installTitle}
+            <span className="install-btn-badge">APP</span>
+            <span className="install-btn-copy">
+              <strong>{installTitle}</strong>
+              <small>{installEnv.isIos ? 'Fast setup from Safari' : 'One tap for mobile and desktop'}</small>
+            </span>
+            <span className="install-btn-arrow">→</span>
           </button>
           <button
-            className="install-btn glass-btn secondary-install-btn"
-            onClick={handleCopyInstallLink}
-          >
-            {copiedInstallLink ? 'LINK COPIED' : 'COPY APP LINK'}
-          </button>
-          <button
-            className="install-btn glass-btn secondary-install-btn install-muted-btn"
+            className="install-link-btn"
             onClick={() => {
-              handleRefreshApp()
+              setShowInstallHelp(true)
+              setCurrentSection('content')
             }}
           >
-            REFRESH APP
+            Need manual steps?
           </button>
         </div>
       </div>
@@ -558,7 +553,10 @@ function App() {
                 <p>{installHint}</p>
               </div>
             </div>
-          <button className="install-action-btn" onClick={handleInstall}>{installTitle}</button>
+          <button className="install-action-btn install-action-primary" onClick={handleInstall}>
+            <span>{installTitle}</span>
+            <span className="install-action-arrow">→</span>
+          </button>
         </div>
       )}
 
@@ -995,6 +993,25 @@ function App() {
                    <span className="label">AFFILIATION</span>
                    <span className="value">Centurion University of Management and Technology</span>
                 </div>
+              </div>
+              <div className="profile-install-wrap">
+                <button
+                  className="install-btn install-primary-btn profile-install-btn"
+                  onClick={handleInstall}
+                >
+                  <span className="install-btn-badge">APP</span>
+                  <span className="install-btn-copy">
+                    <strong>{installTitle}</strong>
+                    <small>{installEnv.isIos ? 'Add it from Safari in one step' : 'Install EyeCare Pro on phone or PC'}</small>
+                  </span>
+                  <span className="install-btn-arrow">→</span>
+                </button>
+                <button
+                  className="install-link-btn profile-install-link"
+                  onClick={() => setShowInstallHelp(true)}
+                >
+                  Need manual install steps?
+                </button>
               </div>
             </div>
 
