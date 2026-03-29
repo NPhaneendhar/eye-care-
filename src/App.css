@@ -1430,6 +1430,7 @@ button:disabled {
 .astig-suite {
   display: grid;
   gap: 18px;
+  min-width: 0;
 }
 
 .astig-topbar {
@@ -1443,6 +1444,22 @@ button:disabled {
   min-width: 0;
 }
 
+.astig-topbar h3 {
+  margin: 0;
+  color: #f6fff0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(1.45rem, 2.6vw, 2rem);
+  line-height: 1.15;
+}
+
+.astig-topbar-copy {
+  margin: 8px 0 0;
+  max-width: 620px;
+  color: #bcd0c1;
+  font-size: 0.97rem;
+  line-height: 1.65;
+}
+
 .astig-grid {
   display: grid;
   gap: 18px;
@@ -1450,6 +1467,9 @@ button:disabled {
 
 .astig-card {
   padding: 22px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 28px;
   background:
     linear-gradient(180deg, rgba(138, 255, 61, 0.05), rgba(255, 255, 255, 0.02)),
@@ -1475,6 +1495,8 @@ button:disabled {
 .astig-canvas-wrap {
   display: grid;
   place-items: center;
+  min-width: 0;
+  overflow: hidden;
   padding: 18px;
   margin-top: 16px;
   border-radius: 24px;
@@ -1487,6 +1509,7 @@ button:disabled {
 .astig-canvas {
   width: 100%;
   max-width: 520px;
+  display: block;
   border-radius: 24px;
   box-shadow: 0 24px 40px rgba(0, 0, 0, 0.18);
   cursor: crosshair;
@@ -1505,8 +1528,9 @@ button:disabled {
   border: 1px solid rgba(138, 255, 61, 0.16);
   background: rgba(255, 255, 255, 0.03);
   color: #dbf7d0;
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   font-weight: 700;
+  letter-spacing: 0.02em;
   cursor: pointer;
 }
 
@@ -1532,10 +1556,15 @@ button:disabled {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.astig-report-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .astig-report-box,
 .astig-rotation-captures,
 .astig-history-item {
   padding: 16px;
+  min-width: 0;
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(138, 255, 61, 0.12);
@@ -2430,6 +2459,12 @@ button:disabled {
 }
 
 @media (max-width: 520px) {
+  .astig-suite {
+    gap: 14px;
+    width: 100%;
+    overflow-x: clip;
+  }
+
   .app-header.glass {
     align-items: flex-start;
   }
@@ -2476,8 +2511,8 @@ button:disabled {
 
   .astig-card,
   .astig-rotate-card {
-    padding: 18px 16px;
-    border-radius: 22px;
+    padding: 16px 12px;
+    border-radius: 20px;
   }
 
   .ishihara-topbar {
@@ -2528,9 +2563,14 @@ button:disabled {
   }
 
   .astig-topbar h3 {
-    font-size: 1.35rem;
+    font-size: 1.28rem;
     line-height: 1.2;
     overflow-wrap: anywhere;
+  }
+
+  .astig-topbar-copy {
+    font-size: 0.9rem;
+    line-height: 1.55;
   }
 
   .astig-angle-list,
@@ -2543,15 +2583,65 @@ button:disabled {
 
   .astig-angle-chip {
     width: 100%;
+    min-width: 0;
+    padding: 9px 10px;
+    font-size: 0.82rem;
   }
 
   .astig-canvas-wrap {
+    padding: 10px;
+    border-radius: 18px;
+  }
+
+  .astig-canvas {
+    max-width: min(100%, 300px);
+    border-radius: 18px;
+  }
+
+  .astig-section-head h4 {
+    font-size: 1rem;
+  }
+
+  .astig-section-head p,
+  .astig-step p,
+  .forensic-help {
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .astig-step {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
     padding: 12px;
   }
 
-  .rotating-line-wheel {
-    width: min(78vw, 260px);
-    height: min(78vw, 260px);
+  .astig-step-num {
+    width: 34px;
+    height: 34px;
+    border-radius: 12px;
+  }
+
+  .forensic-panel {
+    padding: 14px 12px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .forensic-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .calibration-wrap {
+    overflow: hidden;
+  }
+
+  .calibration-rect {
+    max-width: 100%;
+    min-width: 0;
+    padding: 0 10px;
+    text-align: center;
+    box-sizing: border-box;
   }
 
   .bottom-nav.glass {

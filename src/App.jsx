@@ -841,8 +841,8 @@ function App() {
                   <AstigmatismPrecisionTest
                     onExit={() => setScreeningType(null)}
                     onSaveResult={(report) => {
-                      if (typeof report.fusedAxis === 'number') {
-                        const axisLabel = `${Math.round(report.fusedAxis)} deg`
+                      if (typeof report.detectedAxis === 'number') {
+                        const axisLabel = `${Math.round(report.detectedAxis)} deg`
                         setAstigmatismAxis(axisLabel)
                         updateActiveSessionResults({ astigmatism: axisLabel })
                         addLog('Astigmatism', `Approx axis ${axisLabel}`)
@@ -852,11 +852,10 @@ function App() {
                           result: axisLabel,
                           metrics: [
                             { label: 'Selected Lines', value: report.selectedAngles?.length ? report.selectedAngles.map((angle) => `${Math.round(angle)} deg`).join(', ') : 'None' },
-                            { label: 'Rotating Test', value: report.rotationCaptures?.length ? report.rotationCaptures.map((angle) => `${Math.round(angle)} deg`).join(', ') : 'No captures' },
                             { label: 'Approx Axis', value: axisLabel },
                           ],
                           notes: [
-                            'Axis is estimated from selected meridians and optional rotating-line captures.',
+                            'Axis is estimated from the selected chart lines.',
                             'This is a screening output only.',
                           ],
                         })

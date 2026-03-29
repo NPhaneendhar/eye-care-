@@ -5,8 +5,6 @@ import { CARD_WIDTH_MM, getPxPerMm, loadCalibration, saveCalibration } from '../
 const LINE_COUNT = 24
 const ANGLES = Array.from({ length: LINE_COUNT }, (_, index) => index * (180 / LINE_COUNT))
 const DEFAULT_RECT_WIDTH = 320
-const ROTATION_STEP = 1
-const ROTATION_INTERVAL_MS = 120
 const CHART_DIAMETER_MM = 140
 
 const normalizeAxis = (angle) => {
@@ -145,43 +143,6 @@ function ClockDialCanvas({ pxPerMm, selectedAngles, lineCount = LINE_COUNT, onTo
   )
 }
 
-function RotatingLineTest({ active, angle, onStart, onStop, onCapture }) {
-  return (
-    <div className="astig-rotate-card">
-      <div className="astig-section-head">
-        <h4>Optional Rotating Line Test</h4>
-        <p>Watch the line rotate slowly and tap when it looks sharpest.</p>
-      </div>
-
-      <div className="rotating-line-stage">
-        <div className="rotating-line-wheel">
-          <div className="rotating-line-center" />
-          <div className="rotating-line" style={{ transform: `translate(-50%, -50%) rotate(${angle}deg)` }} />
-        </div>
-      </div>
-
-      <div className="rotating-line-meta">
-        <span>Current angle: {angleLabel(angle)}</span>
-        <span>{active ? 'Scanning...' : 'Ready'}</span>
-      </div>
-
-      <div className="rotating-line-actions">
-        {active ? (
-          <>
-            <button className="btn-primary glow-btn" onClick={() => onCapture(angle)}>This looks sharpest</button>
-            <button className="btn-secondary" onClick={onStop}>Pause</button>
-          </>
-        ) : (
-          <>
-            <button className="btn-primary glow-btn" onClick={onStart}>Start rotating test</button>
-            <button className="btn-secondary" onClick={() => onCapture(angle)}>Use current angle</button>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
   const initialCalibration = useMemo(() => loadCalibration(), [])
   const [rectWidthPx, setRectWidthPx] = useState(() => {
@@ -190,28 +151,11 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
   })
   const [savedCalibration, setSavedCalibration] = useState(initialCalibration)
   const [selectedAngles, setSelectedAngles] = useState([])
-  const [rotationAngle, setRotationAngle] = useState(0)
-  const [rotationActive, setRotationActive] = useState(false)
-  const [rotationCaptures, setRotationCaptures] = useState([])
   const [reportHistory, setReportHistory] = useState([])
 
   const pxPerMm = useMemo(() => getPxPerMm(savedCalibration), [savedCalibration])
   const selectedAxis = useMemo(() => averageAxialAngles(selectedAngles), [selectedAngles])
-  const rotatingAxis = useMemo(() => averageAxialAngles(rotationCaptures), [rotationCaptures])
-  const fusedAxis = useMemo(() => {
-    const values = [selectedAxis, rotatingAxis].filter((value) => typeof value === 'number')
-    return averageAxialAngles(values)
-  }, [rotatingAxis, selectedAxis])
-
-  useEffect(() => {
-    if (!rotationActive) return undefined
-
-    const timer = window.setInterval(() => {
-      setRotationAngle((prev) => normalizeAxis(prev + ROTATION_STEP))
-    }, ROTATION_INTERVAL_MS)
-
-    return () => window.clearInterval(timer)
-  }, [rotationActive])
+  const detectedAxis = selectedAxis
 
   const toggleAngle = (angle) => {
     setSelectedAngles((prev) =>
@@ -224,24 +168,17 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
     setSavedCalibration(calibration)
   }
 
-  const handleCaptureRotation = (angle) => {
-    setRotationCaptures((prev) => [...prev, normalizeAxis(angle)].slice(-8))
-    setRotationActive(false)
-  }
-
   const buildReport = () => {
     const report = {
       id: Date.now(),
       timestamp: new Date().toLocaleString(),
       selectedAngles,
-      rotationCaptures,
       selectedAxis,
-      rotatingAxis,
-      fusedAxis,
+      detectedAxis,
     }
 
     setReportHistory((prev) => [report, ...prev].slice(0, 5))
-    if (onSaveResult && typeof fusedAxis === 'number') {
+    if (onSaveResult && typeof detectedAxis === 'number') {
       onSaveResult(report)
     }
   }
@@ -250,8 +187,8 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
     <div className="astig-suite">
       <div className="astig-topbar">
         <div>
-          <span className="lab-kicker">Forensic Vision Screen</span>
-          <h3>Astigmatism Precision Test</h3>
+          <h3>Astigmatism Test</h3>
+          <p className="astig-topbar-copy">Use the chart below and tap the lines that look darkest or clearest.</p>
         </div>
         <button className="exit-btn" onClick={onExit}>Exit Test</button>
       </div>
@@ -260,7 +197,7 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
         <section className="astig-card glass-card">
           <div className="astig-section-head">
             <h4>Instructions</h4>
-            <p>Clinically inspired fan chart screening for one eye at a time.</p>
+            <p>Check one eye at a time with a simple clock-dial chart.</p>
           </div>
           <div className="astig-instructions">
             <div className="astig-step">
@@ -281,7 +218,7 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
               <span className="astig-step-num">3</span>
               <div>
                 <strong>Select the clearest lines</strong>
-                <p>Tap the meridians that appear darkest, sharpest, or most defined.</p>
+                <p>Tap the lines that look darkest, sharpest, or easiest to see.</p>
               </div>
             </div>
           </div>
@@ -297,7 +234,7 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
         <section className="astig-card glass-card">
           <div className="astig-section-head">
             <h4>Clock Dial Chart</h4>
-            <p>24 evenly spaced radial lines, high contrast, proportional scaling.</p>
+            <p>Tap any line label or tap near a line on the chart to mark it.</p>
           </div>
 
           <ClockDialCanvas pxPerMm={pxPerMm} selectedAngles={selectedAngles} onToggleAngle={toggleAngle} />
@@ -316,7 +253,7 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
 
           <div className="astig-result-strip">
             <div>
-              <span className="astig-label">Selected meridians</span>
+              <span className="astig-label">Selected lines</span>
               <strong>{selectedAngles.length ? selectedAngles.map(angleLabel).join(', ') : 'None yet'}</strong>
             </div>
             <div>
@@ -327,38 +264,17 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
         </section>
       </div>
 
-      <RotatingLineTest
-        active={rotationActive}
-        angle={rotationAngle}
-        onStart={() => setRotationActive(true)}
-        onStop={() => setRotationActive(false)}
-        onCapture={handleCaptureRotation}
-      />
-
       <section className="astig-card glass-card">
         <div className="astig-section-head">
           <h4>Report</h4>
-          <p>Combine line selections with optional rotating-line captures.</p>
+          <p>Your result is estimated from the lines you selected on the chart.</p>
         </div>
 
-        <div className="astig-report-grid">
-          <div className="astig-report-box">
-            <span className="astig-label">Selection-based axis</span>
-            <strong>{typeof selectedAxis === 'number' ? angleLabel(selectedAxis) : '--'}</strong>
-          </div>
-          <div className="astig-report-box">
-            <span className="astig-label">Rotating-line axis</span>
-            <strong>{typeof rotatingAxis === 'number' ? angleLabel(rotatingAxis) : '--'}</strong>
-          </div>
+        <div className="astig-report-grid astig-report-grid-single">
           <div className="astig-report-box highlight">
             <span className="astig-label">Approx detected axis</span>
-            <strong>{typeof fusedAxis === 'number' ? angleLabel(fusedAxis) : 'Select lines first'}</strong>
+            <strong>{typeof detectedAxis === 'number' ? angleLabel(detectedAxis) : 'Select lines first'}</strong>
           </div>
-        </div>
-
-        <div className="astig-rotation-captures">
-          <span className="astig-label">Rotating-line captures</span>
-          <strong>{rotationCaptures.length ? rotationCaptures.map(angleLabel).join(', ') : 'No captures yet'}</strong>
         </div>
 
         <div className="astig-report-actions">
@@ -367,9 +283,6 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
             className="btn-secondary"
             onClick={() => {
               setSelectedAngles([])
-              setRotationCaptures([])
-              setRotationAngle(0)
-              setRotationActive(false)
             }}
           >
             Reset Responses
@@ -390,7 +303,7 @@ function AstigmatismPrecisionTest({ onExit, onSaveResult }) {
                 </div>
                 <div className="astig-history-row">
                   <span>Approx axis</span>
-                  <strong>{typeof report.fusedAxis === 'number' ? angleLabel(report.fusedAxis) : '--'}</strong>
+                  <strong>{typeof report.detectedAxis === 'number' ? angleLabel(report.detectedAxis) : '--'}</strong>
                 </div>
               </div>
             ))}
