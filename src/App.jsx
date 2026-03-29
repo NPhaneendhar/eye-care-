@@ -11,6 +11,66 @@ import { openPatientPdfReport } from './utils/pdfReport'
 
 const snellenLetters = ['E', 'F', 'P', 'T', 'O', 'Z', 'L', 'D', 'C']
 
+const getInstallEnvironment = () => {
+  const ua = window.navigator.userAgent.toLowerCase()
+  const isIos = /iphone|ipad|ipod/.test(ua)
+  const isAndroid = /android/.test(ua)
+  const isSafari = /safari/.test(ua) && !/chrome|crios|edg|opr/.test(ua)
+  const isDesktop = !isIos && !isAndroid
+  const canShare = typeof navigator.share === 'function'
+  const isSecure =
+    window.isSecureContext ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1'
+
+  return {
+    isAndroid,
+    isDesktop,
+    isIos,
+    isSafari,
+    canShare,
+    isSecure,
+  }
+}
+
+const getInstallInstructions = (env, canPrompt) => {
+  if (!env.isSecure) {
+    return [
+      'Open this app from an HTTPS website. Install will not work from an insecure link.',
+      'After opening the secure version, try Install App again in Chrome, Edge, or Safari.',
+    ]
+  }
+
+  if (canPrompt) {
+    return [
+      'Press Install App below.',
+      'Approve the browser popup to add EyeCare Pro to your device.',
+    ]
+  }
+
+  if (env.isIos) {
+    return [
+      'Open this app in Safari.',
+      'Tap Share and choose Add to Home Screen.',
+      'Tap Add to install it like an app on your iPhone or iPad.',
+    ]
+  }
+
+  if (env.isAndroid) {
+    return [
+      'Open this app in Chrome or Edge on Android.',
+      'Tap the browser menu and choose Install app or Add to Home screen.',
+      'If the option is missing, refresh once and wait a few seconds.',
+    ]
+  }
+
+  return [
+    'Open this app in Chrome or Edge on your computer.',
+    'Use the install icon in the address bar or the browser menu and choose Install EyeCare Pro.',
+    'If install does not appear, refresh the page once and try again.',
+  ]
+}
+
 function App() {
   const baseUrl = import.meta.env.BASE_URL
   const [launcherDismissed, setLauncherDismissed] = useState(() => localStorage.getItem('launcherDismissed') === 'true')
@@ -42,6 +102,15 @@ function App() {
   const [activeSession, setActiveSession] = useState(() => JSON.parse(localStorage.getItem('activePatientSession')) || null)
   const [toolReport, setToolReport] = useState(null)
   const [showInstallHelp, setShowInstallHelp] = useState(false)
+  const [installEnv, setInstallEnv] = useState(() => ({
+    isAndroid: false,
+    isDesktop: true,
+    isIos: false,
+    isSafari: false,
+    canShare: false,
+    isSecure: true,
+  }))
+  const [copiedInstallLink, setCopiedInstallLink] = useState(false)
   
   // Ishihara State
   const [ishiharaResult, setIshiharaResult] = useState(() => localStorage.getItem('ishiharaResult') || 'Neutral')
@@ -142,6 +211,8 @@ function App() {
   }, [])
 
   useEffect(() => {
+    setInstallEnv(getInstallEnvironment())
+
     const isStandalone =
       window.matchMedia('(display-mode: standalone)').matches ||
       window.navigator.standalone === true
@@ -170,6 +241,13 @@ function App() {
       window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
+
+  useEffect(() => {
+    if (!copiedInstallLink) return undefined
+
+    const timeout = window.setTimeout(() => setCopiedInstallLink(false), 1800)
+    return () => window.clearTimeout(timeout)
+  }, [copiedInstallLink])
 
   const addLog = (type, value) => {
     const newLog = { 
@@ -260,6 +338,11 @@ function App() {
   }
 
   const handleInstall = async () => {
+    if (isInstalled) {
+      setCurrentSection('content')
+      return
+    }
+
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const choice = await deferredPrompt.userChoice
@@ -281,6 +364,34 @@ function App() {
     setShowInstallHelp(true)
     setCurrentSection('content')
   }
+
+  const handleCopyInstallLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopiedInstallLink(true)
+      playClinicalTone('soft')
+    } catch {
+      setShowInstallHelp(true)
+    }
+  }
+
+  const installInstructions = getInstallInstructions(installEnv, Boolean(deferredPrompt))
+  const installTitle = isInstalled
+    ? 'OPEN APP'
+    : deferredPrompt
+      ? 'INSTALL APP'
+      : installEnv.isIos
+        ? 'ADD TO HOME SCREEN'
+        : 'INSTALL GUIDE'
+  const installHint = !installEnv.isSecure
+    ? 'Install works only from HTTPS or localhost.'
+    : deferredPrompt
+      ? 'Your browser is ready to install EyeCare Pro.'
+      : installEnv.isIos
+        ? 'Safari installs this app from the Share menu.'
+        : installEnv.isDesktop
+          ? 'Chrome or Edge on desktop can install this as an app.'
+          : 'Chrome or Edge on mobile can add this app to your home screen.'
 
   const handleRefreshApp = () => {
     playClinicalTone('soft')
@@ -380,16 +491,23 @@ function App() {
           <div className="eye-icon">👁️</div>
           <h1 className="premium-glow-text">EyeCare Pro</h1>
           <p className="description">Advanced Clinical Dashboard for Mobile</p>
+          <p className="install-subtitle">{installHint}</p>
           <button
             className="install-btn glass-btn"
             onClick={() => {
               handleInstall()
             }}
           >
-            DOWNLOAD APP
+            {installTitle}
           </button>
           <button
             className="install-btn glass-btn secondary-install-btn"
+            onClick={handleCopyInstallLink}
+          >
+            {copiedInstallLink ? 'LINK COPIED' : 'COPY APP LINK'}
+          </button>
+          <button
+            className="install-btn glass-btn secondary-install-btn install-muted-btn"
             onClick={() => {
               handleRefreshApp()
             }}
@@ -436,11 +554,11 @@ function App() {
           <div className="banner-content">
             <span className="icon">APP</span>
             <div className="text">
-              <h3>Download Mobile App</h3>
-              <p>Tap below to install or open EyeCare Pro.</p>
+                <h3>Download Mobile App</h3>
+                <p>{installHint}</p>
+              </div>
             </div>
-          </div>
-          <button className="install-action-btn" onClick={handleInstall}>DOWNLOAD APP</button>
+          <button className="install-action-btn" onClick={handleInstall}>{installTitle}</button>
         </div>
       )}
 
@@ -484,35 +602,40 @@ function App() {
               <div>
                 <span className="card-tag">APP INSTALL</span>
                 <h3>Download / Install EyeCare Pro</h3>
-                <p>If your browser does not show the install popup automatically, use these steps.</p>
+                  <p>Use the browser install popup when available. If it does not appear, follow the steps below for your device.</p>
               </div>
               <button className="exit-btn" onClick={() => setShowInstallHelp(false)}>Close</button>
             </div>
 
-            <div className="install-help-steps">
-              <div className="install-help-step">
-                <strong>Chrome / Edge</strong>
-                <p>Open the browser menu, then choose `Install app` or `Add to Home screen`.</p>
+              <div className="install-help-steps">
+                {installInstructions.map((step, index) => (
+                  <div className="install-help-step" key={step}>
+                    <strong>Step {index + 1}</strong>
+                    <p>{step}</p>
+                  </div>
+                ))}
+                <div className="install-help-step">
+                  <strong>Best browser</strong>
+                  <p>{installEnv.isIos ? 'Safari on iPhone or iPad.' : 'Chrome or Edge usually gives the easiest install flow.'}</p>
+                </div>
+                <div className="install-help-step">
+                  <strong>Install on another device</strong>
+                  <p>Use Copy App Link, then open that link on your phone or computer and install it there.</p>
+                </div>
               </div>
-              <div className="install-help-step">
-                <strong>Mobile browsers</strong>
-                <p>Open the browser share or menu option, then choose `Add to Home Screen`.</p>
-              </div>
-              <div className="install-help-step">
-                <strong>If install is still not showing</strong>
-                <p>Press refresh once, wait a few seconds, and try the download button again.</p>
-              </div>
-            </div>
 
-            <div className="install-help-actions">
-              <button className="btn-primary glow-btn" onClick={() => {
-                setShowInstallHelp(false)
-                setCurrentSection('content')
-              }}>
-                OPEN APP
-              </button>
-              <button className="btn-secondary" onClick={handleRefreshApp}>REFRESH APP</button>
-            </div>
+              <div className="install-help-actions">
+                <button className="btn-secondary" onClick={handleCopyInstallLink}>
+                  {copiedInstallLink ? 'LINK COPIED' : 'COPY APP LINK'}
+                </button>
+                <button className="btn-primary glow-btn" onClick={() => {
+                  setShowInstallHelp(false)
+                  setCurrentSection('content')
+                }}>
+                  OPEN APP
+                </button>
+                <button className="btn-secondary" onClick={handleRefreshApp}>REFRESH APP</button>
+              </div>
           </div>
         </div>
       )}

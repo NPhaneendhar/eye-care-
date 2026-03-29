@@ -254,6 +254,13 @@ button:disabled {
   margin-bottom: 24px;
 }
 
+.install-subtitle {
+  margin: -8px 0 20px;
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 .install-btn {
   width: 100%;
   padding: 18px 22px;
@@ -265,6 +272,10 @@ button:disabled {
 
 .secondary-install-btn {
   margin-top: 12px;
+}
+
+.install-muted-btn {
+  opacity: 0.9;
 }
 
 .glass-btn {
@@ -1457,7 +1468,7 @@ button:disabled {
 
 .install-help-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 18px;
 }
@@ -2165,7 +2176,8 @@ button:disabled {
   .results-grid,
   .results-footer,
   .session-meta,
-  .eye-choice {
+  .eye-choice,
+  .install-help-actions {
     grid-template-columns: 1fr;
   }
 
