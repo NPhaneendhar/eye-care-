@@ -1,4 +1,4 @@
-﻿const MAPS = {
+const MAPS = {
   E: ['11111', '10000', '11110', '10000', '11111'],
   F: ['11111', '10000', '11110', '10000', '10000'],
   P: ['11110', '10010', '11110', '10000', '10000'],
@@ -10,9 +10,12 @@
   Z: ['11111', '00010', '00100', '01000', '11111'],
 }
 
+const GRID_UNITS = 5
+const CELL_SIZE = 100 / GRID_UNITS
+
 function SnellenOptotype({ letter, sizePx }) {
-  const rows = MAPS[letter] || MAPS.E
-  const displayLetter = rows ? letter : 'E'
+  const displayLetter = MAPS[letter] ? letter : 'E'
+  const rows = MAPS[displayLetter]
 
   return (
     <svg
@@ -21,24 +24,26 @@ function SnellenOptotype({ letter, sizePx }) {
       viewBox="0 0 100 100"
       xmlns="http://www.w3.org/2000/svg"
       role="img"
-      aria-label={`Optotype ${letter}`}
+      aria-label={`Optotype ${displayLetter}`}
       preserveAspectRatio="xMidYMid meet"
+      shapeRendering="crispEdges"
       style={{ display: 'block', flex: '0 0 auto' }}
     >
-      <rect x="3" y="3" width="94" height="94" rx="18" fill="#fffdf7" />
-      <text
-        x="50"
-        y="56"
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fontFamily="Georgia, 'Times New Roman', serif"
-        fontSize="76"
-        fontWeight="700"
-        letterSpacing="-2"
-        fill="#111111"
-      >
-        {displayLetter}
-      </text>
+      <rect x="0" y="0" width="100" height="100" fill="#fffdf7" />
+      {rows.flatMap((row, rowIndex) =>
+        row.split('').map((cell, columnIndex) =>
+          cell === '1' ? (
+            <rect
+              key={`${displayLetter}-${rowIndex}-${columnIndex}`}
+              x={columnIndex * CELL_SIZE}
+              y={rowIndex * CELL_SIZE}
+              width={CELL_SIZE}
+              height={CELL_SIZE}
+              fill="#111111"
+            />
+          ) : null,
+        ),
+      )}
     </svg>
   )
 }

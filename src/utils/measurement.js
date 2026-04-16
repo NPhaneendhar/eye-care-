@@ -1,6 +1,7 @@
 ﻿export const CARD_WIDTH_MM = 85.6
 export const SNELLEN_6_6_MM = 8.7
 export const CALIBRATION_STORAGE_KEY = 'snellenCalibrationV1'
+export const FALLBACK_PX_PER_MM = 3.7795275591
 
 const getViewportScale = () => {
   if (typeof window === 'undefined') return 1
