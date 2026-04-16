@@ -971,7 +971,7 @@ button:disabled {
   border-left: 1px solid rgba(100, 215, 255, 0.3);
 }
 
-.info-section + .info-section {
+.info-section+.info-section {
   margin-top: 20px;
 }
 
@@ -1440,7 +1440,7 @@ button:disabled {
   gap: 16px;
 }
 
-.astig-topbar > div {
+.astig-topbar>div {
   min-width: 0;
 }
 
@@ -2612,11 +2612,15 @@ button:disabled {
 }
 
 .snellen-lab-dock {
-  bottom: 12px;
-  padding: 18px;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 14px;
   display: grid;
-  gap: 14px;
-  border-radius: 30px;
+  gap: 12px;
+  border-radius: 0;
   max-height: 54vh;
   overflow: auto;
   background:
@@ -2644,7 +2648,7 @@ button:disabled {
 
 .snellen-lab-card-wide,
 .snellen-calibration-card {
-  grid-column: 1 / -1;
+  grid-column: unset;
 }
 
 .snellen-lab-card-head {
@@ -2689,10 +2693,10 @@ button:disabled {
 
 .snellen-size-chip span {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.74rem;
+  margin-bottom: 4px;
+  font-size: 0.65rem;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: #bfd5e9;
 }
@@ -2700,7 +2704,7 @@ button:disabled {
 .snellen-size-chip strong {
   display: block;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 1.05rem;
+  font-size: 0.95rem;
 }
 
 .snellen-size-chip.active {
@@ -2712,18 +2716,6 @@ button:disabled {
 
 .snellen-size-chip.active span {
   color: rgba(3, 33, 55, 0.74);
-}
-
-.snellen-action-grid,
-.snellen-telemetry-grid,
-.snellen-calibration-stats {
-  display: grid;
-  gap: 10px;
-}
-
-.snellen-action-grid,
-.snellen-telemetry-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .snellen-tool-btn {
@@ -2884,6 +2876,7 @@ button:disabled {
 }
 
 @keyframes pulseIcon {
+
   0%,
   100% {
     transform: translateY(0) scale(1);
@@ -2939,6 +2932,7 @@ button:disabled {
 }
 
 @keyframes floatOrb {
+
   0%,
   100% {
     transform: translate3d(0, 0, 0);
@@ -3201,73 +3195,9 @@ button:disabled {
     transform: none;
   }
 
-  .snellen-lab-header {
-    top: 12px;
-    padding: 16px;
-    border-radius: 24px;
-    flex-direction: column;
-  }
-
-  .snellen-lab-header-meta,
-  .snellen-lab-dock-grid,
-  .snellen-calibration-stats {
-    grid-template-columns: 1fr;
-  }
-
-  .snellen-lab-meta-chip,
-  .snellen-size-chip,
-  .snellen-telemetry-tile {
-    min-width: 0;
-  }
-
-  .snellen-lab-alert {
-    top: 164px;
-  }
-
-  .snellen-lab-stage-wrap {
-    padding-top: 210px;
-    padding-bottom: calc(clamp(430px, 58vh, 640px) + var(--safe-area-bottom));
-  }
-
-  .snellen-lab-stage {
-    width: 100%;
-    min-height: 300px;
-    border-radius: 30px;
-    padding: 20px 16px;
-  }
-
-  .snellen-stage-head,
-  .snellen-stage-footer,
-  .snellen-reference-card,
-  .snellen-lab-card-head {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .snellen-optotype-shell {
-    width: 100%;
-    overflow: auto;
-    justify-items: center;
-  }
-
-  .snellen-optotype-caption {
-    position: static;
-    margin-bottom: 12px;
-  }
-
-  .snellen-action-grid,
-  .snellen-telemetry-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .snellen-size-strip {
-    grid-auto-columns: minmax(140px, 1fr);
-  }
-
   .snellen-lab-dock {
-    bottom: 8px;
-    padding: 14px;
-    border-radius: 24px;
-    max-height: 62vh;
+    top: auto;
+    bottom: 12px;
+    max-height: 52vh;
   }
 }
