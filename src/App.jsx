@@ -979,7 +979,7 @@ function App() {
                 </div>
                 <div className="dev-title-group">
                   <h2 className="premium-glow-text">Goteti Naga Sai Santhosh</h2>
-                  <span className="dev-role">System Architect & Lead Developer</span>
+                  <h2 className="premium-glow-text"> PHANEENDHAR.Nittala</h2><span className="dev-role">System Architect & Lead Developer</span>
                 </div>
               </div>
               
